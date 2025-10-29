@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { transcribeAudio, MAX_AUDIO_SIZE_BYTES, MAX_AUDIO_DURATION_MINUTES } from '@/lib/gemini';
+import { transcribeAudio, MAX_AUDIO_SIZE_BYTES, MAX_AUDIO_DURATION_HOURS } from '@/lib/gemini';
 
 // Allow large file uploads (up to 2GB)
 export const runtime = 'nodejs';
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'File too large',
-          details: `File size: ${(buffer.length / 1024 / 1024).toFixed(1)}MB. Maximum allowed: ${MAX_AUDIO_SIZE_BYTES / 1024 / 1024}MB (~${MAX_AUDIO_DURATION_MINUTES} minutes at 128 kbps)`,
+          details: `File size: ${(buffer.length / 1024 / 1024).toFixed(1)}MB. Maximum allowed: ${(MAX_AUDIO_SIZE_BYTES / 1024 / 1024).toFixed(0)}MB (~${MAX_AUDIO_DURATION_HOURS} hours at 128 kbps)`,
         },
         { status: 413 }
       );

@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 
 type Status = 'idle' | 'recording' | 'converting' | 'transcribing' | 'processing' | 'error' | 'success';
 
-// Maximum file size limit (15MB - matches server limit)
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
-const MAX_DURATION_MINUTES = 15;
+// Maximum file size limit (2GB - matches server limit)
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
+const MAX_DURATION_HOURS = 35; // ~35 hours at 128 kbps
 
 export default function Home() {
   const [status, setStatus] = useState<Status>('idle');
@@ -51,7 +51,7 @@ export default function Home() {
         setStatus('error');
         setMessage(
           `File too large (${formatFileSize(mp3.size)}). Maximum size is ${formatFileSize(MAX_FILE_SIZE)} ` +
-          `(~${MAX_DURATION_MINUTES} minutes). Please upload a shorter audio file.`
+          `(~${MAX_DURATION_HOURS} hours). Please upload a shorter audio file.`
         );
         setRawRecording(blob);
         return;
@@ -102,7 +102,7 @@ export default function Home() {
         setStatus('error');
         setMessage(
           `Recording too large (${formatFileSize(mp3.size)}). Maximum size is ${formatFileSize(MAX_FILE_SIZE)} ` +
-          `(~${MAX_DURATION_MINUTES} minutes). Please record a shorter audio.`
+          `(~${MAX_DURATION_HOURS} hours). Please record a shorter audio.`
         );
         return;
       }
@@ -270,7 +270,7 @@ export default function Home() {
           {/* Info Banner */}
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
-              <span className="font-medium">Max file size:</span> {formatFileSize(MAX_FILE_SIZE)} (~{MAX_DURATION_MINUTES} minutes at 128 kbps)
+              <span className="font-medium">Max file size:</span> {formatFileSize(MAX_FILE_SIZE)} (~{MAX_DURATION_HOURS} hours at 128 kbps)
             </p>
           </div>
 

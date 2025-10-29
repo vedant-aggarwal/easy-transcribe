@@ -111,19 +111,21 @@ curl -X POST https://your-app.vercel.app/api/automation/transcribe \
 - `401` - Missing password
 - `403` - Invalid password
 - `400` - No file provided
-- `413` - File too large (exceeds 15MB limit)
+- `413` - File too large (exceeds 2GB limit)
 - `500` - Transcription failed
 
 ## File Size Limits & Browser Constraints
 
 ### Audio File Limits
 
-- **Max audio file size:** 15MB (~15 minutes at 128 kbps MP3)
-- **Reason:** Gemini API has a ~20MB limit for base64-encoded payloads (inlineData)
+- **Max audio file size:** 2GB (~35 hours at 128 kbps MP3)
 - **Processing:** Files are automatically downsampled to 16 kHz mono MP3 at 128 kbps before upload
 - **Max execution time:** 5 minutes per request
+- **Smart processing:**
+  - Files < 15MB: Direct upload (faster)
+  - Files ≥ 15MB: Use Google File API (supports up to 2GB)
 
-> **Note:** While Next.js supports uploads up to 2GB, the Gemini API limits individual audio files to ~15MB when using the inlineData method. Files are validated both client-side and server-side before processing.
+> **Note:** The application intelligently handles both small and large files. Files under 15MB are sent directly to Gemini using inline data for faster processing. Larger files (15MB-2GB) are uploaded to Google's File API first, then referenced for transcription. This hybrid approach provides both speed and support for very large audio files.
 
 ### Browser Constraints
 
@@ -134,11 +136,12 @@ curl -X POST https://your-app.vercel.app/api/automation/transcribe \
 
 ### Recommendations
 
-- **Optimal file size:** Under 15MB (~15 minutes of audio)
-- **For longer recordings:** Split audio files before uploading, or record in shorter segments
-- **Best performance:** Keep audio files under 10MB
-- **Browser conversion:** Works best with files under 100MB before conversion
-- Ensure stable internet connection for transcription requests
+- **Optimal file size:** Under 2GB (~35 hours of audio)
+- **Best performance:** Files under 15MB process fastest (direct upload)
+- **Large files:** Files 15MB-2GB supported via File API (may take longer to upload)
+- **Browser conversion:** Works best with files under 500MB before MP3 conversion
+- **For very large files:** Consider pre-converting to MP3 at 128 kbps before upload to reduce browser memory usage
+- Ensure stable internet connection for transcription requests, especially for large files
 
 ## Project Structure
 
@@ -180,8 +183,9 @@ curl -X POST https://your-app.vercel.app/api/automation/transcribe \
 ### Transcription fails
 - Verify `GEMINI_API_KEY` is correct and has quota
 - Check file format is supported (most audio/video formats work)
-- Ensure audio file is under 15MB (~15 minutes at 128 kbps)
-- If you see "Request Entity Too Large" error, your file exceeds the 15MB limit
+- Ensure audio file is under 2GB (~35 hours at 128 kbps)
+- For large files (>15MB), transcription may take longer as the file is uploaded to Google's File API first
+- If you see "Request Entity Too Large" error, your file exceeds the 2GB limit
 
 ### Conversion fails
 - Try a different file format
