@@ -111,30 +111,33 @@ curl -X POST https://your-app.vercel.app/api/automation/transcribe \
 - `401` - Missing password
 - `403` - Invalid password
 - `400` - No file provided
+- `413` - File too large (exceeds 15MB limit)
 - `500` - Transcription failed
 
 ## File Size Limits & Browser Constraints
 
-### Server Upload Limits
+### Audio File Limits
 
-- **Max upload size:** 2GB (configured for API routes)
+- **Max audio file size:** 15MB (~15 minutes at 128 kbps MP3)
+- **Reason:** Gemini API has a ~20MB limit for base64-encoded payloads (inlineData)
+- **Processing:** Files are automatically downsampled to 16 kHz mono MP3 at 128 kbps before upload
 - **Max execution time:** 5 minutes per request
-- **Max audio duration:** 9.5 hours per request (Gemini API limit)
-- **Audio processing:** Files are downsampled to 16 kHz mono by Gemini
+
+> **Note:** While Next.js supports uploads up to 2GB, the Gemini API limits individual audio files to ~15MB when using the inlineData method. Files are validated both client-side and server-side before processing.
 
 ### Browser Constraints
 
 - **Recording format:** WebM (browser-dependent codec)
 - **Converted format:** MP3 at 128 kbps, 16 kHz, mono
-- **Browser memory limits:** Files over 500MB may fail during in-browser MP3 conversion
+- **Browser memory limits:** Files over 100MB may fail during in-browser MP3 conversion
 - **Microphone access:** Requires HTTPS in production (or localhost for dev)
 
 ### Recommendations
 
-- **For files under 500MB:** Upload and convert in browser works great
-- **For files 500MB-2GB:** Browser conversion may fail due to memory; use pre-converted MP3 files
-- **Best performance:** Keep audio files under 100 MB
-- **Large files:** For optimal results with very large files, pre-convert to MP3 before upload
+- **Optimal file size:** Under 15MB (~15 minutes of audio)
+- **For longer recordings:** Split audio files before uploading, or record in shorter segments
+- **Best performance:** Keep audio files under 10MB
+- **Browser conversion:** Works best with files under 100MB before conversion
 - Ensure stable internet connection for transcription requests
 
 ## Project Structure
@@ -177,7 +180,8 @@ curl -X POST https://your-app.vercel.app/api/automation/transcribe \
 ### Transcription fails
 - Verify `GEMINI_API_KEY` is correct and has quota
 - Check file format is supported (most audio/video formats work)
-- Ensure audio duration is under 9.5 hours
+- Ensure audio file is under 15MB (~15 minutes at 128 kbps)
+- If you see "Request Entity Too Large" error, your file exceeds the 15MB limit
 
 ### Conversion fails
 - Try a different file format

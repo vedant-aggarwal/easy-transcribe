@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation';
 
 type Status = 'idle' | 'recording' | 'converting' | 'transcribing' | 'processing' | 'error' | 'success';
 
+// Maximum file size limit (15MB - matches server limit)
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+const MAX_DURATION_MINUTES = 15;
+
 export default function Home() {
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
@@ -41,6 +45,18 @@ export default function Home() {
 
     try {
       const mp3 = await convertToMp3(blob);
+
+      // Check file size after conversion
+      if (mp3.size > MAX_FILE_SIZE) {
+        setStatus('error');
+        setMessage(
+          `File too large (${formatFileSize(mp3.size)}). Maximum size is ${formatFileSize(MAX_FILE_SIZE)} ` +
+          `(~${MAX_DURATION_MINUTES} minutes). Please upload a shorter audio file.`
+        );
+        setRawRecording(blob);
+        return;
+      }
+
       setMp3Blob(mp3);
       setFileSize(formatFileSize(mp3.size));
       setStatus('success');
@@ -80,6 +96,17 @@ export default function Home() {
       setMessage('Converting to MP3...');
 
       const mp3 = await convertToMp3(rawBlob);
+
+      // Check file size after conversion
+      if (mp3.size > MAX_FILE_SIZE) {
+        setStatus('error');
+        setMessage(
+          `Recording too large (${formatFileSize(mp3.size)}). Maximum size is ${formatFileSize(MAX_FILE_SIZE)} ` +
+          `(~${MAX_DURATION_MINUTES} minutes). Please record a shorter audio.`
+        );
+        return;
+      }
+
       setMp3Blob(mp3);
       setFileName(`recording-${Date.now()}.mp3`);
       setFileSize(formatFileSize(mp3.size));
@@ -240,6 +267,13 @@ export default function Home() {
         </header>
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          {/* Info Banner */}
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              <span className="font-medium">Max file size:</span> {formatFileSize(MAX_FILE_SIZE)} (~{MAX_DURATION_MINUTES} minutes at 128 kbps)
+            </p>
+          </div>
+
           <div className="space-y-4">
             {/* Upload Section */}
             <div>
